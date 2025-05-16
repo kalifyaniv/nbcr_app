@@ -35,15 +35,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [githubClient, setGithubClient] = useState<GitHubClient | null>(null);
 
   useEffect(() => {
-    const session = supabase.auth.getSession();
-    if (session) {
-      // Initialize user and GitHub client
-      const githubToken = session.provider_token;
-      if (githubToken) {
-        setGithubClient(new GitHubClient(githubToken));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { user: authUser } = session;
+        if (authUser) {
+          const githubToken = session.provider_token;
+          if (githubToken) {
+            setGithubClient(new GitHubClient(githubToken));
+            setUser({
+              id: authUser.id,
+              name: authUser.user_metadata?.full_name || authUser.email || 'User',
+              avatarUrl: authUser.user_metadata?.avatar_url || '',
+              githubToken
+            });
+          }
+        }
+      } else {
+        setUser(null);
+        setGithubClient(null);
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async () => {
@@ -55,10 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) throw error;
-
-    if (data.session?.provider_token) {
-      setGithubClient(new GitHubClient(data.session.provider_token));
-    }
   };
 
   const logout = async () => {

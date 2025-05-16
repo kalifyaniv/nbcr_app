@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRepository } from '../context/RepositoryContext';
 import { 
   Eye, EyeOff, GitBranch, MoreHorizontal, Check, X, Search, Plus, RefreshCw, Filter
@@ -17,10 +17,6 @@ const Repositories: React.FC = () => {
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);
   const [newBranch, setNewBranch] = useState('');
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
-  
-  useEffect(() => {
-    fetchRepositories();
-  }, [fetchRepositories]);
   
   const handleAddBranch = (repoId: string) => {
     if (newBranch.trim()) {
